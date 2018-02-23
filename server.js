@@ -11,18 +11,23 @@ function main() {
     // Parse command line arguments
     cli_args.version(node_packet_pipeline_pkg.version)
         .option('-p, --port [port]', 'Server port', '3000')
+        .option('-s, --server', 'Is Server')
+        .option('-c, --client', 'Is Client')
         .parse(process.argv);
 
     // Store important variables
     var PORT = cli_args.port;
 
-    // Create server
-    var server = udp_server.createServer("10.0.0.29", PORT);
+    if(cli_args.server) {
+        // Create server
+        var server = udp_server.createServer("192.168.122.1", PORT);
+    }
     
-    // Create client
-    var client = udp_client.createClient("10.0.0.29", PORT);
-    client.sendMessage(npp_types.MESSAGE_TYPE.Connection, npp_types.MESSAGE_TYPE.SendReceive, "f");
-    client.sendMessage(npp_types.MESSAGE_TYPE.Data, 0, "Test");
+    if(cli_args.client) {
+        // Create client
+        var client = udp_client.createClient("192.168.122.1", PORT);
+
+    }
 }
 
 main();
