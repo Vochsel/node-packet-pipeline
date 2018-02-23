@@ -20,14 +20,13 @@ function main() {
 
     if(cli_args.server) {
         // Create server
-        var server = udp_server.createServer("192.168.122.1", PORT);
+        var server = new udp_server("localhost", PORT);
     }
     
-    if(cli_args.client) {
+    /*if(cli_args.client) {
         // Create client
         var client = udp_client.createClient("192.168.122.1", PORT);
-
-    }
+    }*/
 }
 
 main();

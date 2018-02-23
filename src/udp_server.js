@@ -1,66 +1,79 @@
 var dgram = require('dgram');
-var npp_types = require('./types');
 
-var connections = new Map();
+var UDPSocket = require("./udp_socket");
+var TYPES = require('./types');
 
-function createServer(a_host, a_port) {
-    var server = dgram.createSocket('udp4');
+class UDPServer extends UDPSocket {
 
-    server.on('listening', function() {
-        var address = server.address();
-        console.log('UDP Server listening on ' + address.address + ' : ' + address.port);
-    });
+    // Overide Socket constructor
+    constructor(a_address = "127.0.0.1", a_port = 0) {
+        super(a_address, a_port);
 
-    server.on('message', function(a_message, a_remote) {
-        var msgType = a_message[0];
-        var typeData = a_message[1];
-        var msgData = a_message.toString('utf8', 2);
+        // Storage of listening clients
+        this.listeningClients = new Array();
+    }
 
-        console.log("Message type: " + msgType + " - " + Object.keys(npp_types.MESSAGE_TYPE)[msgType]);
-        console.log("Type data: " + typeData + " - " + Object.keys(npp_types.CLIENT_TYPE)[typeData]);
-        console.log("Message data: " + msgData);
+    // Overide Socket listening function
+    onListening() {
+        console.log("Server listening!");
+    }
 
-        var conn_id = a_remote.address + ':' + a_remote.port;
+    // Overide Socket receive function
+    onReceivePacket(a_buffer, a_remote) {
+        super.onReceivePacket(a_buffer, a_remote);
 
-        switch(msgType) {
-            case npp_types.MESSAGE_TYPE.Data:
-                //console.log("Data received");
-                console.log("Sending message to " + connections.size + " connections.");
-                
-                connections.forEach(a_conn => {
-                    //TODO: Fix this
-                    console.log(msgData);
-                    server.send(msgData, a_conn.port, a_conn.address, function(a_err, a_bytes) {
-                        if(a_err) throw a_err;
-                        
-                        console.log('UDP Server message sent to ' + a_host + ' : ' + a_conn.port);
-                    });
-                });
-                break;
+        // Get message type
+        var messageType = a_buffer[0];
 
-            case npp_types.MESSAGE_TYPE.Connection:
-                console.log("New connection: " + conn_id);
-                // Switch based on connection type
-                switch(typeData) {
-                    case npp_types.CLIENT_TYPE.Send: break;
+        // Get remainder buffer data
+        var bufferData = a_buffer.toString('utf8', 1);
 
-                    case npp_types.CLIENT_TYPE.SendReceive:
-                    case npp_types.CLIENT_TYPE.Receive:
-                        console.log("Addin to connections");
-                        connections.set(conn_id, {address: a_remote.address, port: a_remote.port});
-                    break;
+        // Log out helpful packet message
+        console.log("Received message type %s. Data: %s", Object.keys(TYPES.MESSAGES)[messageType], bufferData);
+
+        switch(messageType) {
+            // Message is raw data
+            case TYPES.MESSAGES.Data:
+            {
+                // If no listening clients, break
+                if(this.listeningClients.length === 0) break;
+
+                // Loop through listening clients and forward data
+                for(var client of this.listeningClients) {
+                    // Forward packet to listening client
+                    this.sendPacket(bufferData, client);
                 }
+            }
+            break;
 
-                break;
+            // Message is client connection
+            case TYPES.MESSAGES.Connection:
+            {
+                // Get connected client type
+                var clientType = parseInt(bufferData);
+
+                // If client registers as receiver, store in active connections
+                if(clientType === TYPES.CLIENTS.SendReceive || clientType === TYPES.CLIENTS.Receive) {
+                    this.listeningClients.push(a_remote);
+                }
+            }
+            break;
+
+            // Message is client disconnection
+            case TYPES.MESSAGES.Disconnection:
+            {
+                // Loop through listening clients and remove if found
+                for(var i = 0; i < this.listeningClients.length; i++) {
+                    if(this.listeningClients[i] === a_remote) {
+                        // Found client, splice, early exit
+                        this.listeningClients.splice(i, 1);
+                        break;
+                    }
+                }
+            }
+            break;
         }
+    }
+};
 
-    });
-
-    server.bind(a_port, a_host);
-
-    return {
-        server: server
-    };
-}
-
-exports.createServer = createServer;
+module.exports = UDPServer;
