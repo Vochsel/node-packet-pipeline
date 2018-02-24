@@ -19,8 +19,6 @@ class UDPClient extends UDPSocket {
     // Overide Socket listening function
     onListening() {
         console.log("Client listening!");
-
-        
     }
 
     // Overide Socket receive function

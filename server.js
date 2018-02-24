@@ -3,7 +3,6 @@ var cli_args = require('commander');
 
 var npp_types = require('./src/types');
 
-
 var udp_server = require('./src/udp_server');
 var udp_client = require('./src/udp_client');
 
@@ -22,6 +21,11 @@ function main() {
         // Create server
         var server = new udp_server("10.0.0.29", PORT);
     }
+    
+    /*if(cli_args.client) {
+        // Create client
+        var client = udp_client.createClient("192.168.122.1", PORT);
+    }*/
 }
 
 main();
