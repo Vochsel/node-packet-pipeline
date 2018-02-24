@@ -1,6 +1,60 @@
 var dgram = require('dgram');
 
-var npp_types = require('./types');
+var UDPSocket = require("./udp_socket");
+var TYPES = require('./types');
+
+class UDPClient extends UDPSocket {
+
+    // Overide Socket constructor
+    constructor(a_clientType, a_remote = null) {
+        super();
+
+        // Type of client
+        this.clientType = a_clientType;
+
+        // Client has specific remote address
+        this.remoteConnection = a_remote;
+    }
+
+    // Overide Socket listening function
+    onListening() {
+        console.log("Client listening!");
+
+        
+    }
+
+    // Overide Socket receive function
+    onReceivePacket(a_buffer, a_remote) {
+        super.onReceivePacket(a_buffer, a_remote);
+
+        // Get message type
+        var messageType = a_buffer[0];
+
+        // Get remainder buffer data
+        var bufferData = a_buffer.toString('utf8', 1);
+
+        // Log out helpful packet message
+        console.log("Received message type %s. Data: %s", Object.keys(TYPES.MESSAGES)[messageType], bufferData);
+
+        switch(messageType) {
+            // Message is raw data
+            case TYPES.MESSAGES.Data:
+            {
+                // If no listening clients, break
+                if(this.listeningClients.length === 0) break;
+
+                // Loop through listening clients and forward data
+                for(var client of this.listeningClients) {
+                    // Forward packet to listening client
+                    this.sendPacket(bufferData, client);
+                }
+            }
+            break;
+        }
+    }
+};
+
+module.exports = UDPClient;
 
 function createClient(a_remote, a_remotePort) {
     console.log("Creating client");

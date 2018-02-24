@@ -26,10 +26,10 @@ class UDPServer extends UDPSocket {
         var messageType = a_buffer[0];
 
         // Get remainder buffer data
-        var bufferData = a_buffer.toString('utf8', 1);
+        var bufferDataString = a_buffer.toString('utf8', 1, a_buffer.length);
 
         // Log out helpful packet message
-        console.log("Received message type %s. Data: %s", Object.keys(TYPES.MESSAGES)[messageType], bufferData);
+        console.log("Received message type %s. Data: %s", Object.keys(TYPES.MESSAGES)[messageType], bufferDataString);
 
         switch(messageType) {
             // Message is raw data
@@ -37,11 +37,11 @@ class UDPServer extends UDPSocket {
             {
                 // If no listening clients, break
                 if(this.listeningClients.length === 0) break;
-
+                
                 // Loop through listening clients and forward data
                 for(var client of this.listeningClients) {
                     // Forward packet to listening client
-                    this.sendPacket(bufferData, client);
+                    this.sendPacket(a_buffer, client);
                 }
             }
             break;
@@ -50,7 +50,7 @@ class UDPServer extends UDPSocket {
             case TYPES.MESSAGES.Connection:
             {
                 // Get connected client type
-                var clientType = parseInt(bufferData);
+                var clientType = a_buffer[1];
 
                 // If client registers as receiver, store in active connections
                 if(clientType === TYPES.CLIENTS.SendReceive || clientType === TYPES.CLIENTS.Receive) {

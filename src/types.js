@@ -1,7 +1,10 @@
 var MESSAGES = {
     Data          : 0x00,
     Connection    : 0x01,
-    Disconnection : 0x02
+    Disconnection : 0x02,
+    
+    CameraData = 0x03,
+    SceneData = 0x04,
 };
 
 var CLIENTS = {

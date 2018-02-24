@@ -66,7 +66,7 @@ class UDPSocket {
         this.socket.send(a_buffer, a_remote.port, a_remote.address, function(a_err, a_bytes) {
             if(a_err) throw a_err;
             
-            console.log('UDP Server message sent to ' + a_remote.address + ' : ' + a_remote.port);
+            //console.log('UDP Server message sent to %s : %s = %s', a_remote.address, a_remote.port, a_buffer);
         });
     }
 
