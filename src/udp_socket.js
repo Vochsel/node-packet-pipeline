@@ -1,6 +1,8 @@
 // Requirements
 var dgram = require("dgram");
 
+// MessageType - 
+
 // Class definition
 class UDPSocket {
 
